@@ -71,21 +71,27 @@ public class Game {
     public void Playing() {
         boolean playing;
         Choice choice;
-        int gaming = 10;
+        boolean gaming = true;
+        int turn = 0;
         int draw;
         int deckIterate;
         int highest = 0;
+        int folded;
         
         //View view = new View();
         Controller input = new Controller();
 
-        while (gaming>0) {
-            gaming--;
-            view.print("turn " + (10-gaming));
+        while (gaming) {
+            turn++;
+            view.print("turn " + (turn));
+            folded = 0;
             firstDraw();
 
             for (int i = 0; i < player.length; i++) {
-                if (player[i].getState() == Player.State.BLACKJACK) {
+                if(player[i].getMoney() <= 0){
+                    continue;
+                }
+                if (player[i].getState().equals(Player.State.BLACKJACK)) {
                     playing = false;
                 } else {
                     playing = true;
@@ -94,13 +100,13 @@ public class Game {
 //                    view.
                     choice = Choice.HIT;
                     if(i == player.length - 1){
-                        if(player[i].getTotal() > 16 || player[i].getTotal() > highest){ //dealer
+                        if(player[i].getTotal() > 16 || player[i].getTotal() > highest || folded == player.length-1){ //dealer
                             choice = Choice.STAND;
                         }
                     }
                     else{
                         if(player[i].getTotal() < 21){
-                            view.print(player[i].handToString() + " " + player[i].getState());
+                            view.print(player[i].handToString() + "|" + player[i].getState());
                             choice = input.getChoice();
                         }
                         else
@@ -113,12 +119,18 @@ public class Game {
                         playing = false;
                     }
                 }
-                view.print(player[i].handToString() + " " + player[i].getState());
+                if(player[i].getState().equals(Player.State.BUST))
+                    folded++;
+                view.print(player[i].handToString() + "|" + player[i].getState());
                 if(player[i].getTotal() > highest && player[i].getTotal() < 22)
                     highest = player[i].getTotal();
             }
             moneyChange();
             CardReset();
+            choice = input.nextGame();
+            if(choice.equals(choice.FINISH)){
+                gaming = false;
+            }
 //            break;
         }
     }
@@ -188,7 +200,7 @@ public class Game {
 
     public void End() {
         for (int i = 0; i < player.length; i++) {
-            view.print(player[i].myMoney() + "");
+            view.print(player[i].getMoney() + "");
             player[i] = null;
         }
         for (int i = 0; i < deck.length; i++) {
